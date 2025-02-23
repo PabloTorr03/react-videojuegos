@@ -50,7 +50,7 @@ export default function GamesDetails() {
               alt={game.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end">
+            <div className="absolute inset-0 flex items-end">
               <h1 className="text-4xl font-bold text-white p-6">{game.name}</h1>
             </div>
           </div>
