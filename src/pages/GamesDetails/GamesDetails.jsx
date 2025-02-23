@@ -50,7 +50,7 @@ export default function GamesDetails() {
               alt={game.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 flex items-end">
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end">
               <h1 className="text-4xl font-bold text-white p-6">{game.name}</h1>
             </div>
           </div>
@@ -75,6 +75,24 @@ export default function GamesDetails() {
                         className="px-3 py-1 rounded-full bg-gray-600 text-white text-sm hover:bg-yellow-400 hover:text-gray-900 transition-colors"
                       >
                         {tag.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Géneros */}
+              {game.genres && game.genres.length > 0 && (
+                <div>
+                  <h2 className="font-semibold text-yellow-400 mb-2">Géneros:</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {game.genres.map((genre) => (
+                      <Link
+                        key={genre.id}
+                        to={`/genre/${genre.slug}`}
+                        className="px-3 py-1 rounded-full bg-gray-600 text-white text-sm hover:bg-yellow-400 hover:text-gray-900 transition-colors"
+                      >
+                        {genre.name}
                       </Link>
                     ))}
                   </div>
@@ -110,20 +128,6 @@ export default function GamesDetails() {
                         className="px-3 py-1 rounded-full bg-gray-600 text-white text-sm"
                       >
                         {platform.platform.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Géneros */}
-              {game.genres && game.genres.length > 0 && (
-                <div>
-                  <h2 className="font-semibold text-yellow-400 mb-2">Géneros:</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {game.genres.map((genre) => (
-                      <span key={genre.id} className="px-3 py-1 rounded-full bg-gray-600 text-white text-sm">
-                        {genre.name}
                       </span>
                     ))}
                   </div>
