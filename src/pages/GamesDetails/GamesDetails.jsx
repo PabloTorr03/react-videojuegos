@@ -51,7 +51,7 @@ export default function GamesDetails() {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 flex items-end">
-              <h1 className="text-4xl font-bold text-white p-6">{game.name}</h1>
+              <h1 className="text-4xl bg-gray-700 bg-opacity-60 rounded-md font-bold text-white py-3 px-4 m-4">{game.name}</h1>
             </div>
           </div>
           <div className="p-6">
