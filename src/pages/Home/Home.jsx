@@ -1,29 +1,32 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { fetchGames } from "../../service/games.js";
+"use client"
+
+import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
+import Slider from "react-slick"
+import "slick-carousel/slick/slick.css"
+import "slick-carousel/slick/slick-theme.css"
+import { fetchGames } from "../../service/games.js"
 
 function Home() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [games, setGames] = useState([]);
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true)
+  const [games, setGames] = useState([])
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const fetchedGames = await fetchGames();
-        setGames(fetchedGames);
+        setIsLoading(true)
+        const data = await fetchGames()
+        setGames(data.results || [])
       } catch (error) {
-        console.error("Error:", error);
-        setError("Error al cargar los juegos. Por favor, intenta de nuevo más tarde.");
+        console.error("Error:", error)
+        setError("Error al cargar los juegos. Por favor, intenta de nuevo más tarde.")
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
-    fetchData();
-  }, []);
+    }
+    fetchData()
+  }, [])
 
   const settings = {
     dots: true,
@@ -33,10 +36,26 @@ function Home() {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 2000,
-  };
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-900">
+        <p className="text-yellow-400 text-2xl font-semibold animate-pulse">Cargando juegos...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-900">
+        <p className="text-red-500 text-2xl font-semibold">{error}</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="bg-gray-700 pb-10">
+    <div className="bg-gray-800 pb-10">
       <section
         className="w-full mb-6 py-12 md:py-20 lg:py-28 xl:py-36 flex items-center justify-center"
         style={{
@@ -51,9 +70,7 @@ function Home() {
             <h1 className="text-3xl text-white font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
               Bienvenido a <span className="text-yellow-400">Videojuego Project</span>
             </h1>
-            <p className="text-white text-lg md:text-xl font-semibold">
-              Tu enciclopedia definitiva de videojuegos.
-            </p>
+            <p className="text-white text-lg md:text-xl font-semibold">Tu enciclopedia definitiva de videojuegos.</p>
             <p className="text-white text-lg md:text-xl font-semibold">
               Explora la historia, detalles y curiosidades de tus títulos favoritos.
             </p>
@@ -71,15 +88,11 @@ function Home() {
       </section>
 
       <section className="text-center">
-        <h1 className="font-rubiksh text-3xl text-yellow-400 font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
+        <h1 className="font-rubiksh text-3xl text-yellow-400 font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl mb-6">
           Videojuegos Destacados
         </h1>
         <div className="w-full mb-4 mt-6 relative">
-          {isLoading ? (
-            <p className="text-white">Cargando juegos...</p>
-          ) : error ? (
-            <p className="text-red-500">{error}</p>
-          ) : (
+          {games.length > 0 ? (
             <Slider {...settings}>
               {games.map((game) => (
                 <Link to={`/gamesDetails/${game.id}`} key={game.id}>
@@ -87,7 +100,7 @@ function Home() {
                     <div className="image-container relative h-0 pb-[40%] overflow-hidden rounded-md">
                       <img
                         className="absolute inset-0 w-full h-full object-contain rounded-md"
-                        src={game.background_image || "default-image.jpg"}
+                        src={game.background_image || "/placeholder.svg"}
                         alt={game.name}
                       />
                     </div>
@@ -96,11 +109,14 @@ function Home() {
                 </Link>
               ))}
             </Slider>
+          ) : (
+            <p className="text-white">No se encontraron juegos destacados.</p>
           )}
         </div>
       </section>
     </div>
-  );
+  )
 }
 
-export default Home;
+export default Home
+

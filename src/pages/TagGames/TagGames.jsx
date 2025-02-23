@@ -1,34 +1,27 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { fetchGames } from "../../service/games"
-import { Link } from "react-router-dom"
+import { useParams, Link } from "react-router-dom"
+import { fetchGamesByTag } from "../../service/tags"
 
-function Games() {
+function TagGames() {
+  const { tag } = useParams()
   const [isLoading, setLoading] = useState(true)
   const [games, setGames] = useState([])
-  const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
 
   useEffect(() => {
     const getGames = async () => {
       setLoading(true)
-      try {
-        const data = await fetchGames(searchTerm, currentPage)
-        setGames(data.results || [])
-        setTotalPages(Math.ceil((data.count || 0) / 20))
-      } catch (error) {
-        console.error("Error fetching games:", error)
-        setGames([])
-        setTotalPages(0)
-      } finally {
-        setLoading(false)
-      }
+      const data = await fetchGamesByTag(tag, currentPage)
+      setGames(data.results)
+      setTotalPages(Math.ceil(data.count / 20))
+      setLoading(false)
     }
 
     getGames()
-  }, [searchTerm, currentPage])
+  }, [tag, currentPage])
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -44,29 +37,14 @@ function Games() {
 
   return (
     <section className="p-5 bg-gray-800">
-      <div className="flex flex-col sm:flex-row items-center justify-between mb-4 space-y-4 sm:space-y-0">
-        <h1 className="font-rubiksh text-yellow-400 font-extrabold text-4xl">Biblioteca de Juegos</h1>
-
-        <div className="flex items-center w-full sm:w-auto">
-          <div className="relative w-full sm:w-64 md:w-80">
-            <input
-              type="text"
-              placeholder="Buscar..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 pl-8 text-white bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-            />
-            <i className="fas fa-search absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-          </div>
-        </div>
-      </div>
+      <h1 className="font-rubiksh text-yellow-400 font-extrabold text-4xl mb-4">Juegos con el tag: {tag}</h1>
 
       {isLoading ? (
         <p className="text-center text-white text-lg">Cargando juegos...</p>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {games && games.length > 0 ? (
+            {games.length > 0 ? (
               games.map((game) => (
                 <Link
                   to={`/gamesDetails/${game.id}`}
@@ -87,7 +65,7 @@ function Games() {
                 </Link>
               ))
             ) : (
-              <p className="text-center text-white text-lg col-span-4">No se encontraron juegos</p>
+              <p className="text-center text-white text-lg col-span-4">No se encontraron juegos para este tag</p>
             )}
           </div>
           {totalPages > 1 && (
@@ -125,5 +103,5 @@ function Games() {
   )
 }
 
-export default Games
+export default TagGames
 

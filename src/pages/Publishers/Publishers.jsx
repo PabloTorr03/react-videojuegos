@@ -1,33 +1,26 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { fetchGames } from "../../service/games"
+import { fetchPublishers } from "../../service/publishers"
 import { Link } from "react-router-dom"
 
-function Games() {
+function Publishers() {
   const [isLoading, setLoading] = useState(true)
-  const [games, setGames] = useState([])
+  const [publishers, setPublishers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
 
   useEffect(() => {
-    const getGames = async () => {
+    const getPublishers = async () => {
       setLoading(true)
-      try {
-        const data = await fetchGames(searchTerm, currentPage)
-        setGames(data.results || [])
-        setTotalPages(Math.ceil((data.count || 0) / 20))
-      } catch (error) {
-        console.error("Error fetching games:", error)
-        setGames([])
-        setTotalPages(0)
-      } finally {
-        setLoading(false)
-      }
+      const data = await fetchPublishers(searchTerm, currentPage)
+      setPublishers(data.results)
+      setTotalPages(Math.ceil(data.count / 20))
+      setLoading(false)
     }
 
-    getGames()
+    getPublishers()
   }, [searchTerm, currentPage])
 
   const handlePreviousPage = () => {
@@ -45,13 +38,13 @@ function Games() {
   return (
     <section className="p-5 bg-gray-800">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-4 space-y-4 sm:space-y-0">
-        <h1 className="font-rubiksh text-yellow-400 font-extrabold text-4xl">Biblioteca de Juegos</h1>
+        <h1 className="font-rubiksh text-yellow-400 font-extrabold text-4xl">Publishers</h1>
 
         <div className="flex items-center w-full sm:w-auto">
           <div className="relative w-full sm:w-64 md:w-80">
             <input
               type="text"
-              placeholder="Buscar..."
+              placeholder="Buscar publishers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-2 pl-8 text-white bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
@@ -62,32 +55,32 @@ function Games() {
       </div>
 
       {isLoading ? (
-        <p className="text-center text-white text-lg">Cargando juegos...</p>
+        <p className="text-center text-white text-lg">Cargando publishers...</p>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {games && games.length > 0 ? (
-              games.map((game) => (
+            {publishers.length > 0 ? (
+              publishers.map((publisher) => (
                 <Link
-                  to={`/gamesDetails/${game.id}`}
-                  key={game.id}
+                  to={`/publisher/${publisher.id}`}
+                  key={publisher.id}
                   className="transform transition duration-300 hover:scale-105"
                 >
                   <div className="bg-gray-700 rounded-xl shadow-md overflow-hidden">
                     <img
-                      src={game.background_image || "/placeholder.svg"}
-                      alt={game.name}
+                      src={publisher.image_background || "/placeholder.svg"}
+                      alt={publisher.name}
                       className="w-full h-48 object-cover"
                     />
                     <div className="p-4">
-                      <h3 className="text-lg font-bold text-white">{game.name}</h3>
-                      <p className="text-yellow-400">⭐ {game.rating}</p>
+                      <h3 className="text-lg font-bold text-white">{publisher.name}</h3>
+                      <p className="text-gray-400">Juegos: {publisher.games_count}</p>
                     </div>
                   </div>
                 </Link>
               ))
             ) : (
-              <p className="text-center text-white text-lg col-span-4">No se encontraron juegos</p>
+              <p className="text-center text-white text-lg col-span-4">No se encontraron publishers</p>
             )}
           </div>
           {totalPages > 1 && (
@@ -125,5 +118,5 @@ function Games() {
   )
 }
 
-export default Games
+export default Publishers
 
