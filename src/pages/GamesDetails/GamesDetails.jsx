@@ -56,10 +56,10 @@ export default function GamesDetails() {
           </div>
           <div className="p-6">
             <div className="flex flex-wrap gap-4 mb-6">
-              <p className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-sm font-semibold">
+              <p className="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                 ⭐ {game.rating}
               </p>
-              <p className="bg-gray-600 text-white px-3 py-1 rounded-full text-sm">{game.released || "N/A"}</p>
+              <p className="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">{game.released || "N/A"}</p>
             </div>
             <p className="text-lg leading-relaxed text-gray-300 mb-6">{game.description_raw}</p>
             <div className="space-y-6">
