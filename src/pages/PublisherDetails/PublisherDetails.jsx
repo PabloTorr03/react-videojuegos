@@ -1,60 +1,58 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import { getPublisherDetails, getPublisherGames, clearCurrentPublisher } from "../../store/slices/publishersSlice"
-import { setPublisherGamesPage } from "../../store/slices/uiSlice"
+import { fetchPublisherDetails, fetchPublisherGames } from "../../service/publishers"
 import DOMPurify from "dompurify"
 
 function PublisherDetails() {
   const { id } = useParams()
-  const dispatch = useDispatch()
-  const { currentPublisher, publisherGames, publisherGamesCount } = useSelector((state) => state.publishers)
-  const { loading, pagination } = useSelector((state) => ({
-    loading: state.ui.loading.publisherDetails,
-    pagination: state.ui.pagination,
-  }))
-
-  const { publisherGamesCurrentPage } = pagination
-  const totalPages = Math.ceil(publisherGamesCount / 20)
+  const [publisher, setPublisher] = useState(null)
+  const [games, setGames] = useState([])
+  const [isLoading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
 
   useEffect(() => {
-    dispatch(getPublisherDetails(id))
-    dispatch(getPublisherGames({ id, page: publisherGamesCurrentPage }))
-
-    // Cleanup function
-    return () => {
-      dispatch(clearCurrentPublisher())
+    const fetchData = async () => {
+      setLoading(true)
+      const publisherData = await fetchPublisherDetails(id)
+      const gamesData = await fetchPublisherGames(id, currentPage)
+      setPublisher(publisherData)
+      setGames(gamesData.results)
+      setTotalPages(Math.ceil(gamesData.count / 20))
+      setLoading(false)
     }
-  }, [dispatch, id, publisherGamesCurrentPage])
+
+    fetchData()
+  }, [id, currentPage])
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
-      dispatch(setPublisherGamesPage(newPage))
+      setCurrentPage(newPage)
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return <p className="text-center text-white text-lg">Cargando información del publisher...</p>
   }
 
-  if (!currentPublisher) {
+  if (!publisher) {
     return <p className="text-center text-red-500 text-lg">Error al cargar la información del publisher.</p>
   }
 
   return (
     <div className="min-h-screen bg-gray-800 text-white p-6">
       <div className="container mx-auto">
-        <h1 className="text-4xl font-bold text-yellow-400 mb-6">{currentPublisher.name}</h1>
+        <h1 className="text-4xl font-bold text-yellow-400 mb-6">{publisher.name}</h1>
         <div
           className="mb-8 prose prose-invert max-w-none bg-gray-700 p-6 rounded-lg shadow-lg"
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentPublisher.description) }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(publisher.description) }}
         />
 
         <h2 className="text-3xl font-bold text-yellow-400 mb-6">Juegos del Publisher</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {publisherGames.map((game) => (
+          {games.map((game) => (
             <Link
               to={`/gamesDetails/${game.id}`}
               key={game.id}
@@ -78,10 +76,10 @@ function PublisherDetails() {
         {totalPages > 1 && (
           <div className="mt-10 flex justify-center items-center space-x-4">
             <button
-              onClick={() => handlePageChange(publisherGamesCurrentPage - 1)}
-              disabled={publisherGamesCurrentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
               className={`px-4 py-2 rounded ${
-                publisherGamesCurrentPage === 1
+                currentPage === 1
                   ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                   : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
               }`}
@@ -89,13 +87,13 @@ function PublisherDetails() {
               Anterior
             </button>
             <span className="text-yellow-400 font-semibold">
-              Página {publisherGamesCurrentPage} de {totalPages}
+              Página {currentPage} de {totalPages}
             </span>
             <button
-              onClick={() => handlePageChange(publisherGamesCurrentPage + 1)}
-              disabled={publisherGamesCurrentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
               className={`px-4 py-2 rounded ${
-                publisherGamesCurrentPage === totalPages
+                currentPage === totalPages
                   ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                   : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
               }`}
@@ -110,4 +108,3 @@ function PublisherDetails() {
 }
 
 export default PublisherDetails
-

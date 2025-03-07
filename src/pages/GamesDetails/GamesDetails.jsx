@@ -1,29 +1,30 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import { getGameDetails, clearCurrentGame } from "../../store/slices/gamesSlice"
+import { fetchGameDetails } from "../../service/games"
 
 export default function GamesDetails() {
   const { id } = useParams()
-  const dispatch = useDispatch()
-  const { currentGame } = useSelector((state) => state.games)
-  const { loading, error } = useSelector((state) => ({
-    loading: state.ui.loading.gameDetails,
-    error: state.ui.error.gameDetails,
-  }))
+  const [game, setGame] = useState(null)
+  const [isLoading, setLoading] = useState(true)
 
   useEffect(() => {
-    dispatch(getGameDetails(id))
-
-    // Cleanup function
-    return () => {
-      dispatch(clearCurrentGame())
+    const fetchGame = async () => {
+      try {
+        const data = await fetchGameDetails(id)
+        setGame(data)
+      } catch (error) {
+        console.error("Error:", error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [dispatch, id])
 
-  if (loading) {
+    fetchGame()
+  }, [id])
+
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-900">
         <p className="text-yellow-400 text-2xl font-semibold animate-pulse">Cargando detalles...</p>
@@ -31,15 +32,13 @@ export default function GamesDetails() {
     )
   }
 
-  if (error || !currentGame) {
+  if (!game) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-900">
         <p className="text-red-500 text-2xl font-semibold">Error al cargar el juego.</p>
       </div>
     )
   }
-
-  const game = currentGame
 
   return (
     <div className="min-h-screen bg-gray-800 text-white">
@@ -52,17 +51,15 @@ export default function GamesDetails() {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 flex items-end">
-              <h1 className="text-4xl bg-gray-700 bg-opacity-60 rounded-md font-bold text-white py-3 px-4 m-4">
-                {game.name}
-              </h1>
+              <h1 className="text-4xl bg-gray-700 bg-opacity-60 rounded-md font-bold text-white py-3 px-4 m-4">{game.name}</h1>
             </div>
           </div>
           <div className="p-6">
             <div className="flex flex-wrap gap-4 mb-6">
-              <p className="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">⭐ {game.rating}</p>
               <p className="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                {game.released || "N/A"}
+                ⭐ {game.rating}
               </p>
+              <p className="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">{game.released || "N/A"}</p>
             </div>
             <p className="text-lg leading-relaxed text-gray-300 mb-6">{game.description_raw}</p>
             <div className="space-y-6">

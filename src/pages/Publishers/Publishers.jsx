@@ -1,43 +1,38 @@
 "use client"
 
-import { useEffect } from "react"
-import { useDispatch, useSelector } from "react-redux"
+import { useEffect, useState } from "react"
+import { fetchPublishers } from "../../service/publishers"
 import { Link } from "react-router-dom"
-import { getPublishers } from "../../store/slices/publishersSlice"
-import { setPublishersPage, setPublishersSearchTerm } from "../../store/slices/uiSlice"
 
 function Publishers() {
-  const dispatch = useDispatch()
-  const { publishersList, publishersCount } = useSelector((state) => state.publishers)
-  const { loading, pagination, search } = useSelector((state) => ({
-    loading: state.ui.loading.publishers,
-    pagination: state.ui.pagination,
-    search: state.ui.search,
-  }))
-
-  const { publishersCurrentPage } = pagination
-  const { publishersSearchTerm } = search
-  const totalPages = Math.ceil(publishersCount / 20)
+  const [isLoading, setLoading] = useState(true)
+  const [publishers, setPublishers] = useState([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
 
   useEffect(() => {
-    dispatch(getPublishers({ searchTerm: publishersSearchTerm, page: publishersCurrentPage }))
-  }, [dispatch, publishersSearchTerm, publishersCurrentPage])
+    const getPublishers = async () => {
+      setLoading(true)
+      const data = await fetchPublishers(searchTerm, currentPage)
+      setPublishers(data.results)
+      setTotalPages(Math.ceil(data.count / 20))
+      setLoading(false)
+    }
+
+    getPublishers()
+  }, [searchTerm, currentPage])
 
   const handlePreviousPage = () => {
-    if (publishersCurrentPage > 1) {
-      dispatch(setPublishersPage(publishersCurrentPage - 1))
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
     }
   }
 
   const handleNextPage = () => {
-    if (publishersCurrentPage < totalPages) {
-      dispatch(setPublishersPage(publishersCurrentPage + 1))
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
     }
-  }
-
-  const handleSearchChange = (e) => {
-    dispatch(setPublishersSearchTerm(e.target.value))
-    dispatch(setPublishersPage(1)) // Reset to first page on new search
   }
 
   return (
@@ -50,8 +45,8 @@ function Publishers() {
             <input
               type="text"
               placeholder="Buscar publishers..."
-              value={publishersSearchTerm}
-              onChange={handleSearchChange}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full p-2 pl-8 text-white bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
             />
             <i className="fas fa-search absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -59,13 +54,13 @@ function Publishers() {
         </div>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <p className="text-center text-white text-lg">Cargando publishers...</p>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {publishersList.length > 0 ? (
-              publishersList.map((publisher) => (
+            {publishers.length > 0 ? (
+              publishers.map((publisher) => (
                 <Link
                   to={`/publisher/${publisher.id}`}
                   key={publisher.id}
@@ -92,9 +87,9 @@ function Publishers() {
             <div className="mt-6 flex justify-center items-center space-x-4">
               <button
                 onClick={handlePreviousPage}
-                disabled={publishersCurrentPage === 1}
+                disabled={currentPage === 1}
                 className={`px-4 py-2 rounded ${
-                  publishersCurrentPage === 1
+                  currentPage === 1
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}
@@ -102,13 +97,13 @@ function Publishers() {
                 Anterior
               </button>
               <span className="text-white">
-                Página {publishersCurrentPage} de {totalPages}
+                Página {currentPage} de {totalPages}
               </span>
               <button
                 onClick={handleNextPage}
-                disabled={publishersCurrentPage === totalPages}
+                disabled={currentPage === totalPages}
                 className={`px-4 py-2 rounded ${
-                  publishersCurrentPage === totalPages
+                  currentPage === totalPages
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}
