@@ -3,6 +3,10 @@ import { useRouteError, Link } from "react-router-dom"
 export default function ErrorPage() {
   const error = useRouteError()
 
+  // Podemos usar Redux aquí si necesitamos acceder a algún estado global
+  // Por ejemplo, para mostrar un mensaje de error personalizado basado en el estado
+  // const { someState } = useSelector(state => state.someSlice)
+
   return (
     <div className="min-h-screen bg-gray-800 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden">
       {/* Fondo con efecto de "glitch" */}

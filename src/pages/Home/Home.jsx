@@ -1,32 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { Link } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
 import Slider from "react-slick"
 import "slick-carousel/slick/slick.css"
 import "slick-carousel/slick/slick-theme.css"
-import { fetchGames } from "../../service/games.js"
+import { getGames } from "../../store/slices/gamesSlice"
+
 
 function Home() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [games, setGames] = useState([])
-  const [error, setError] = useState(null)
+  const dispatch = useDispatch()
+  const { gamesList } = useSelector((state) => state.games)
+  const { loading, error } = useSelector((state) => ({
+    loading: state.ui.loading.games,
+    error: state.ui.error.games,
+  }))
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const data = await fetchGames()
-        setGames(data.results || [])
-      } catch (error) {
-        console.error("Error:", error)
-        setError("Error al cargar los juegos. Por favor, intenta de nuevo más tarde.")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
+    dispatch(getGames({}))
+  }, [dispatch])
 
   const settings = {
     dots: true,
@@ -38,7 +31,7 @@ function Home() {
     autoplaySpeed: 2000,
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-900">
         <p className="text-yellow-400 text-2xl font-semibold animate-pulse">Cargando juegos...</p>
@@ -92,9 +85,9 @@ function Home() {
           Videojuegos Destacados
         </h1>
         <div className="w-full mb-4 mt-6 relative">
-          {games.length > 0 ? (
+          {gamesList.length > 0 ? (
             <Slider {...settings}>
-              {games.map((game) => (
+              {gamesList.map((game) => (
                 <Link to={`/gamesDetails/${game.id}`} key={game.id}>
                   <div className="text-center relative">
                     <div className="image-container relative h-0 pb-[40%] overflow-hidden rounded-md">

@@ -1,37 +1,36 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { fetchGamesByTag } from "../../service/tags"
+import { useDispatch, useSelector } from "react-redux"
+import { getGamesByTag } from "../../store/slices/gamesSlice"
+import { setGamesByTagPage } from "../../store/slices/uiSlice"
 
 function TagGames() {
   const { tag } = useParams()
-  const [isLoading, setLoading] = useState(true)
-  const [games, setGames] = useState([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
+  const dispatch = useDispatch()
+  const { gamesByTag, gamesByTagCount } = useSelector((state) => state.games)
+  const { loading, pagination } = useSelector((state) => ({
+    loading: state.ui.loading.gamesByTag,
+    pagination: state.ui.pagination,
+  }))
+
+  const { gamesByTagCurrentPage } = pagination
+  const totalPages = Math.ceil(gamesByTagCount / 20)
 
   useEffect(() => {
-    const getGames = async () => {
-      setLoading(true)
-      const data = await fetchGamesByTag(tag, currentPage)
-      setGames(data.results)
-      setTotalPages(Math.ceil(data.count / 20))
-      setLoading(false)
-    }
-
-    getGames()
-  }, [tag, currentPage])
+    dispatch(getGamesByTag({ tag, page: gamesByTagCurrentPage }))
+  }, [dispatch, tag, gamesByTagCurrentPage])
 
   const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+    if (gamesByTagCurrentPage > 1) {
+      dispatch(setGamesByTagPage(gamesByTagCurrentPage - 1))
     }
   }
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+    if (gamesByTagCurrentPage < totalPages) {
+      dispatch(setGamesByTagPage(gamesByTagCurrentPage + 1))
     }
   }
 
@@ -39,13 +38,13 @@ function TagGames() {
     <section className="p-5 bg-gray-800">
       <h1 className="font-rubiksh text-yellow-400 font-extrabold text-4xl mb-4">Juegos con el tag: {tag}</h1>
 
-      {isLoading ? (
+      {loading ? (
         <p className="text-center text-white text-lg">Cargando juegos...</p>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {games.length > 0 ? (
-              games.map((game) => (
+            {gamesByTag.length > 0 ? (
+              gamesByTag.map((game) => (
                 <Link
                   to={`/gamesDetails/${game.id}`}
                   key={game.id}
@@ -72,9 +71,9 @@ function TagGames() {
             <div className="mt-6 flex justify-center items-center space-x-4">
               <button
                 onClick={handlePreviousPage}
-                disabled={currentPage === 1}
+                disabled={gamesByTagCurrentPage === 1}
                 className={`px-4 py-2 rounded ${
-                  currentPage === 1
+                  gamesByTagCurrentPage === 1
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}
@@ -82,13 +81,13 @@ function TagGames() {
                 Anterior
               </button>
               <span className="text-white">
-                Página {currentPage} de {totalPages}
+                Página {gamesByTagCurrentPage} de {totalPages}
               </span>
               <button
                 onClick={handleNextPage}
-                disabled={currentPage === totalPages}
+                disabled={gamesByTagCurrentPage === totalPages}
                 className={`px-4 py-2 rounded ${
-                  currentPage === totalPages
+                  gamesByTagCurrentPage === totalPages
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}

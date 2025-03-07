@@ -1,45 +1,44 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { fetchGames } from "../../service/games"
+import { useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
 import { Link } from "react-router-dom"
+import { getGames } from "../../store/slices/gamesSlice"
+import { setGamesPage, setGamesSearchTerm } from "../../store/slices/uiSlice"
 
 function Games() {
-  const [isLoading, setLoading] = useState(true)
-  const [games, setGames] = useState([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
+  const dispatch = useDispatch()
+  const { gamesList, gamesCount } = useSelector((state) => state.games)
+  const { loading, error, pagination, search } = useSelector((state) => ({
+    loading: state.ui.loading.games,
+    error: state.ui.error.games,
+    pagination: state.ui.pagination,
+    search: state.ui.search,
+  }))
+
+  const { gamesCurrentPage } = pagination
+  const { gamesSearchTerm } = search
+  const totalPages = Math.ceil(gamesCount / 20)
 
   useEffect(() => {
-    const getGames = async () => {
-      setLoading(true)
-      try {
-        const data = await fetchGames(searchTerm, currentPage)
-        setGames(data.results || [])
-        setTotalPages(Math.ceil((data.count || 0) / 20))
-      } catch (error) {
-        console.error("Error fetching games:", error)
-        setGames([])
-        setTotalPages(0)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    getGames()
-  }, [searchTerm, currentPage])
+    dispatch(getGames({ searchTerm: gamesSearchTerm, page: gamesCurrentPage }))
+  }, [dispatch, gamesSearchTerm, gamesCurrentPage])
 
   const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+    if (gamesCurrentPage > 1) {
+      dispatch(setGamesPage(gamesCurrentPage - 1))
     }
   }
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+    if (gamesCurrentPage < totalPages) {
+      dispatch(setGamesPage(gamesCurrentPage + 1))
     }
+  }
+
+  const handleSearchChange = (e) => {
+    dispatch(setGamesSearchTerm(e.target.value))
+    dispatch(setGamesPage(1)) // Reset to first page on new search
   }
 
   return (
@@ -52,8 +51,8 @@ function Games() {
             <input
               type="text"
               placeholder="Buscar..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={gamesSearchTerm}
+              onChange={handleSearchChange}
               className="w-full p-2 pl-8 text-white bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
             />
             <i className="fas fa-search absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -61,13 +60,13 @@ function Games() {
         </div>
       </div>
 
-      {isLoading ? (
+      {loading ? (
         <p className="text-center text-white text-lg">Cargando juegos...</p>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {games && games.length > 0 ? (
-              games.map((game) => (
+            {gamesList && gamesList.length > 0 ? (
+              gamesList.map((game) => (
                 <Link
                   to={`/gamesDetails/${game.id}`}
                   key={game.id}
@@ -94,9 +93,9 @@ function Games() {
             <div className="mt-6 flex justify-center items-center space-x-4">
               <button
                 onClick={handlePreviousPage}
-                disabled={currentPage === 1}
+                disabled={gamesCurrentPage === 1}
                 className={`px-4 py-2 rounded ${
-                  currentPage === 1
+                  gamesCurrentPage === 1
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}
@@ -104,13 +103,13 @@ function Games() {
                 Anterior
               </button>
               <span className="text-white">
-                Página {currentPage} de {totalPages}
+                Página {gamesCurrentPage} de {totalPages}
               </span>
               <button
                 onClick={handleNextPage}
-                disabled={currentPage === totalPages}
+                disabled={gamesCurrentPage === totalPages}
                 className={`px-4 py-2 rounded ${
-                  currentPage === totalPages
+                  gamesCurrentPage === totalPages
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}

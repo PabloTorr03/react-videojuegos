@@ -1,37 +1,36 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
-import { fetchGamesByGenre } from "../../service/games"
+import { useDispatch, useSelector } from "react-redux"
+import { getGamesByGenre } from "../../store/slices/gamesSlice"
+import { setGamesByGenrePage } from "../../store/slices/uiSlice"
 
 function GenreGames() {
   const { genre } = useParams()
-  const [isLoading, setLoading] = useState(true)
-  const [games, setGames] = useState([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(0)
+  const dispatch = useDispatch()
+  const { gamesByGenre, gamesByGenreCount } = useSelector((state) => state.games)
+  const { loading, pagination } = useSelector((state) => ({
+    loading: state.ui.loading.gamesByGenre,
+    pagination: state.ui.pagination,
+  }))
+
+  const { gamesByGenreCurrentPage } = pagination
+  const totalPages = Math.ceil(gamesByGenreCount / 20)
 
   useEffect(() => {
-    const getGames = async () => {
-      setLoading(true)
-      const data = await fetchGamesByGenre(genre, currentPage)
-      setGames(data.results)
-      setTotalPages(Math.ceil(data.count / 20))
-      setLoading(false)
-    }
-
-    getGames()
-  }, [genre, currentPage])
+    dispatch(getGamesByGenre({ genre, page: gamesByGenreCurrentPage }))
+  }, [dispatch, genre, gamesByGenreCurrentPage])
 
   const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+    if (gamesByGenreCurrentPage > 1) {
+      dispatch(setGamesByGenrePage(gamesByGenreCurrentPage - 1))
     }
   }
 
   const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+    if (gamesByGenreCurrentPage < totalPages) {
+      dispatch(setGamesByGenrePage(gamesByGenreCurrentPage + 1))
     }
   }
 
@@ -39,13 +38,13 @@ function GenreGames() {
     <section className="p-5 bg-gray-800">
       <h1 className="font-rubiksh text-yellow-400 font-extrabold text-4xl mb-4">Juegos del género: {genre}</h1>
 
-      {isLoading ? (
+      {loading ? (
         <p className="text-center text-white text-lg">Cargando juegos...</p>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {games.length > 0 ? (
-              games.map((game) => (
+            {gamesByGenre.length > 0 ? (
+              gamesByGenre.map((game) => (
                 <Link
                   to={`/gamesDetails/${game.id}`}
                   key={game.id}
@@ -72,9 +71,9 @@ function GenreGames() {
             <div className="mt-6 flex justify-center items-center space-x-4">
               <button
                 onClick={handlePreviousPage}
-                disabled={currentPage === 1}
+                disabled={gamesByGenreCurrentPage === 1}
                 className={`px-4 py-2 rounded ${
-                  currentPage === 1
+                  gamesByGenreCurrentPage === 1
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}
@@ -82,13 +81,13 @@ function GenreGames() {
                 Anterior
               </button>
               <span className="text-white">
-                Página {currentPage} de {totalPages}
+                Página {gamesByGenreCurrentPage} de {totalPages}
               </span>
               <button
                 onClick={handleNextPage}
-                disabled={currentPage === totalPages}
+                disabled={gamesByGenreCurrentPage === totalPages}
                 className={`px-4 py-2 rounded ${
-                  currentPage === totalPages
+                  gamesByGenreCurrentPage === totalPages
                     ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                     : "bg-yellow-400 text-gray-900 hover:bg-yellow-500"
                 }`}
@@ -104,3 +103,4 @@ function GenreGames() {
 }
 
 export default GenreGames
+
